@@ -16,10 +16,10 @@ from is_safe_url import is_safe_url
 from flask_ckeditor import CKEditor, CKEditorField
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.urandom(32)
+app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY")
 ckeditor = CKEditor(app)
 Bootstrap(app)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blog.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL", "sqlite:///blog.db")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 login_manager = LoginManager()
@@ -130,12 +130,13 @@ def register():
             db.session.add(user)
             db.session.commit()
             login_user(user)
-            if not is_safe_url(url_for("get_all_posts"),
-                               allowed_hosts={"http://127.0.0.1:5000"}):
-                flash('The page you were about to be redirected to is not safe.')
-                return abort(400)
-            else:
-                return redirect(url_for("get_all_posts"))
+            return redirect(url_for("get_all_posts"))
+            # if not is_safe_url(url_for("get_all_posts"),
+            #                    allowed_hosts={"http://127.0.0.1:5000"}):
+            #     flash('The page you were about to be redirected to is not safe.')
+            #     return abort(400)
+            # else:
+            #     return redirect(url_for("get_all_posts"))
     return render_template("register.html", form=form)
 
 
@@ -147,11 +148,12 @@ def login():
             user = User.query.filter_by(email=request.form.get('email')).first()
             if check_password_hash(user.password, request.form.get('password')):
                 login_user(user)
-                if not is_safe_url(url_for("get_all_posts"), allowed_hosts={"http://127.0.0.1:5000"}):
-                    flash('The page you were about to be redirected to is not safe.')
-                    return abort(400)
-                else:
-                    return redirect(url_for("get_all_posts"))
+                return redirect(url_for("get_all_posts"))
+                # if not is_safe_url(url_for("get_all_posts"), allowed_hosts={"http://127.0.0.1:5000"}):
+                #     flash('The page you were about to be redirected to is not safe.')
+                #     return abort(400)
+                # else:
+                #     return redirect(url_for("get_all_posts"))
             else:
                 flash('Please, enter the right password.')
                 return render_template("login.html", form=form)
